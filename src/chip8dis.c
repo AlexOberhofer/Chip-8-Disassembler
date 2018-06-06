@@ -2,7 +2,23 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "chip8dis.h"
+/*
+CHIP 8 NOTES
 
+- Each Instruction is 2 bytes represented by 4 HEXIDECIMAL Digits
+
+- When an instruction is presented containing non-hexadecimal characters, these
+locations should be replaced in a program with valid hexadecimal digits depending upon the input data.
+For example, valid uses of the CHIP-8 instruction 8XY1 include 8001, 81A1, 8F21, etc.
+
+- Consider the 1NNN, instruction, which is used to jump to a certain address. A valid
+use of this instruction would be 134A, which would reference the memory address 34A.
+
+- CHIP-8 programs are normally stored in memory in big-endian fashion, with the most
+ significant byte of a two-byte instruction being stored first.
+
+
+*/
 void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
 
     uint8_t *code = &codebuffer[pc];
@@ -10,9 +26,8 @@ void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
 
     printf("%04x %02x %02x ", pc, code[0], code[1]);
 
-    //DOT IN NAME SIGNIFIES INSTRUCTION MODIFIES VF
-    switch (firstnib)
-    {
+    //DOT IN NAME SIGNIFIES INSTRUCTION MODIFIES VF Register
+    switch (firstnib) {
         case 0x0:
             switch (code[1]) {
               case 0xe0: printf("%-10s", "CLS"); break;
@@ -29,7 +44,6 @@ void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
         case 0x07: printf("%-10s V%02X, #$%02x", "ADD", code[0]&0xf, code[1]); break;
         case 0x08:{
           uint8_t lastnib = code[1] &0xf;
-
           switch(lastnib) {
             case 0x0: printf("%-10s V%01X, V%01X", "LD.", code[0]&0xf, code[1]>>4); break;
             case 0x1: printf("%-10s V%01X, V%01X", "OR.", code[0]&0xf, code[1]>>4); break;
@@ -44,18 +58,22 @@ void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
           }
         }
         break;
-        case 0x09: printf("9 not handled yet"); break;
-        case 0x0a:
-            {
-                uint8_t addresshi = code[0] & 0x0f;
-                printf("%-10s I,#$%01x%02x", "MVI", addresshi, code[1]);
-            }
-            break;
-        case 0x0b: printf("b not handled yet"); break;
-        case 0x0c: printf("c not handled yet"); break;
-        case 0x0d: printf("d not handled yet"); break;
-        case 0x0e: printf("e not handled yet"); break;
-        case 0x0f: printf("f not handled yet"); break;
+        case 0x09: printf("%-10s V%01X, V%01X", "SNE", code[0]&0xf, code[1] >> 4); break;
+        case 0x0a: printf("%-10s I,#$%01x%02x", "MVI", code[0]&0xf, code[1]); break;
+        case 0x0b: printf("%-10s $%01x%02x(V0)", "JUMP", code[0]&0xf, code[1]); break;
+        case 0x0c: printf("%-10s V%01X, #$%02X", "RND", code[0]%0xf, code[1]); break;
+        case 0x0d: printf("%-10s V%01X, V%01X, #$%01x", "SPRITE", code[0]&0xf, code[1]>>4, code[1]&0xf); break;
+        case 0x0e: switch(code[1]){
+          case 0x9E: printf("%-10s V%01X", "SKIPKEY.Y", code[0]&0xf); break;
+          case 0xA1: printf("%-10s V%01X", "SKIPKEY.N", code[0]&0xf); break;
+          default: printf("UNKNOWN E Instruction");break;
+        }
+        break;
+        case 0x0f:
+          switch(code[1]){
+            default: printf("UNKNOWN F Instruction"); break;
+          }
+          break;
     }
 }
 
