@@ -30,6 +30,7 @@ void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
     switch (firstnib) {
         case 0x0:
             switch (code[1]) {
+              case 0x00: printf("Empty Address"); break;
               case 0xe0: printf("%-10s", "CLS"); break;
               case 0xee: printf("%-10s", "RET"); break;
               default: printf("UNKNOWN 0 Instruction"); break;
@@ -59,11 +60,12 @@ void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
         }
         break;
         case 0x09: printf("%-10s V%01X, V%01X", "SNE", code[0]&0xf, code[1] >> 4); break;
-        case 0x0a: printf("%-10s I,#$%01x%02x", "MVI", code[0]&0xf, code[1]); break;
+        case 0x0a: printf("%-10s I, #$%01x%02x", "MVI", code[0]&0xf, code[1]); break;
         case 0x0b: printf("%-10s $%01x%02x(V0)", "JUMP", code[0]&0xf, code[1]); break;
         case 0x0c: printf("%-10s V%01X, #$%02X", "RND", code[0]%0xf, code[1]); break;
         case 0x0d: printf("%-10s V%01X, V%01X, #$%01x", "SPRITE", code[0]&0xf, code[1]>>4, code[1]&0xf); break;
-        case 0x0e: switch(code[1]){
+        case 0x0e:
+        switch(code[1]){
           case 0x9E: printf("%-10s V%01X", "SKIPKEY.Y", code[0]&0xf); break;
           case 0xA1: printf("%-10s V%01X", "SKIPKEY.N", code[0]&0xf); break;
           default: printf("UNKNOWN E Instruction");break;
@@ -71,13 +73,22 @@ void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
         break;
         case 0x0f:
           switch(code[1]){
+            case 0x07: printf("%-10s V%01X, DT", "MOV", code[0]&0xf); break;
+            case 0x0a: printf("%-10s V%01X", "WAIT KEY", code[0]&0xf); break;
+            case 0x15: printf("%-10s DEL, V%01X", "MOV", code[0]&0xf); break;
+            case 0x18: printf("%-10s SND, V%01X", "MOV", code[0]&0xf); break;
+            case 0x1e: printf("%-10s I, V%01X", "ADD", code[0]&0xf); break;
+            case 0x29: printf("%-10s I, V%01X", "LD", code[0]&0xf); break;
+            case 0x33: printf("%-10s (I), V%01X", "MOV BCD", code[0]&0xf); break;
+            case 0x55: printf("%-10s (I), V0-V%01X", "MEM", code[0]&0xf); break;
+            case 0x65: printf("%-10s V0-V%01X, (I)", "MEM", code[0]&0xf); break;
             default: printf("UNKNOWN F Instruction"); break;
           }
           break;
     }
 }
 
-int main(int argc, char** argv[]) {
+int main(int argc, char* argv[]) {
 
   //OPEN FILE
   FILE *f = fopen(argv[1], "rb");
