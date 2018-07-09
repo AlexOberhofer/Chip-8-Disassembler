@@ -6,6 +6,17 @@
 CHIP 8 NOTES
 
 - Each Instruction is 2 bytes represented by 4 HEXIDECIMAL Digits
+How to access each bit -
+0 - code[0] >> 4
+1 - code[0] &0xf
+2 - code[1] >> 4
+3 - code[1] &0xf;
+
+nnn or addr - A 12-bit value, the lowest 12 bits of the instruction
+n or nibble - A 4-bit value, the lowest 4 bits of the instruction
+x - A 4-bit value, the lower 4 bits of the high byte of the instruction
+y - A 4-bit value, the upper 4 bits of the low byte of the instruction
+kk or byte - An 8-bit value, the lowest 8 bits of the instruction
 
 - When an instruction is presented containing non-hexadecimal characters, these
 locations should be replaced in a program with valid hexadecimal digits depending upon the input data.
@@ -16,9 +27,24 @@ use of this instruction would be 134A, which would reference the memory address 
 
 - CHIP-8 programs are normally stored in memory in big-endian fashion, with the most
  significant byte of a two-byte instruction being stored first.
-
-
 */
+
+C8* init(void) {
+
+  C8 * c = calloc(1, sizeof(C8));
+  c-> memory = calloc(4096, 1);
+  c-> screen = &c->memory[0xF00];
+  c-> sp = 0xFA0;
+  c-> pc = 0x200;
+
+  return c;
+
+}
+
+void executeOp(void) {
+
+}
+
 void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
 
     uint8_t *code = &codebuffer[pc];
