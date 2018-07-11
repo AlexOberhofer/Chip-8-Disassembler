@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "chip8dis.h"
 /*
 CHIP 8 NOTES
@@ -29,17 +30,7 @@ use of this instruction would be 134A, which would reference the memory address 
  significant byte of a two-byte instruction being stored first.
 */
 
-C8* init(void) {
 
-  C8 * c = calloc(1, sizeof(C8));
-  c-> memory = calloc(4096, 1);
-  c-> screen = &c->memory[0xF00];
-  c-> sp = 0xFA0;
-  c-> pc = 0x200;
-
-  return c;
-
-}
 
 void executeOp(void) {
 
@@ -114,13 +105,101 @@ void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
     }
 }
 
+void init(FILE *f, C8 * c) {
+
+  c-> memory = calloc(4096, 1);
+  c-> screen = &c->memory[0xF00];
+  c-> sp = 0xFA0;
+  c-> pc = 0x200;
+
+  //Place fonts in portion of memory that  would normally be occupied
+  //by the CH8 Interpreter
+  for(int i = 0; i < 80; i++){
+    c->memory[i] = fonts[i];
+  }
+
+  //initialize memory values
+  memset(c->screen, 0, sizeof(c->screen));
+  memset(c->V, 0, sizeof(c->V));
+  memset(c->stack, 0, sizeof(c->stack));
+  fread(c->memory+0x200, 1, MEM_SIZE-0x200, f);
+
+}
+
+void dumpReg(C8 * c) {
+  printf("\n-----------------------------------------REGISTER DUMP INITIATED-----------------------------------------\n\n");
+  int count = 0;
+
+  printf("GENERAL PURPOSE REGISTERS------------\n\n");
+
+  for(int i = 0; i < NUM_REGISTERS; i++){
+    printf("V%01X[%02x] ", i, c->V[i]);
+    count++;
+
+    if(count == 2) {
+      count = 0;
+      printf("\n");
+    }
+  }
+  printf("\nSPECIAL REGISTERS--------------------\n\n");
+  printf("I[%04X]\n", c->I);
+  printf("PC[%04X]\n", c->pc);
+  printf("SP[%04X]\n", c->sp);
+  printf("DELAY[%02X]\n", c->delay);
+  printf("TIMER[%02X]\n", c->timer);
+  printf("\n");
+
+  printf("\nSTACK--------------------------------\n\n");
+
+  for(int i = 0; i < NUM_REGISTERS; i++){
+    printf("STACK FRAME(%02d) %04x\n", i, c->stack[i]);
+  }
+  printf("\n");
+}
+
+void dumpMem(C8 * c){
+
+  printf("\n-----------------------------------------MEMORY DUMP INITIATED-----------------------------------------\n");
+  printf("\n\n");
+  printf("BEGIN INTERPRETER MEMORY(0x000 - 0x01FF)---------------------------------------------------------------\n\n");
+
+  int count = 0;
+
+  for(int i = 0; i < MEM_SIZE; i+=2){
+    if(i == 0x200){
+      printf("\nBEGIN PROGRAM MEMORY(0x200 - 0xFFF)-------------------------------------------------------------------\n\n");
+    }
+
+    printf("I:%04X %02x%02x  ", i, c->memory[i], c->memory[i+1]);
+    count++;
+
+    if(count == 8) {
+      printf("\n");
+      count = 0;
+    }
+  }
+  printf("\n");
+}
+
 int main(int argc, char* argv[]) {
+
 
   //OPEN FILE
   FILE *f = fopen(argv[1], "rb");
   if (f == NULL) {
     printf("Error: Could not open %s\n", argv[1]);
+    exit(1);
   }
+
+  //create memory space for Chip 8
+  C8 * c = calloc(sizeof(C8), 1);
+
+  //initialize memory values
+  init(f, c);
+
+  dumpMem(c);
+
+  dumpReg(c);
 
   //get size of file
   fseek(f, 0L, SEEK_END);
@@ -132,15 +211,20 @@ int main(int argc, char* argv[]) {
   //Read file into memory at 0x200 and close.
   unsigned char *buffer = malloc(fsize + 0x200); //create a buffer
   fread(buffer+0x200, fsize, 1, f); //read file into memory
-  fclose(f); // close FILE
+
 
   int pc = 0x200; // start PC at 0x200 address
 
+/*
   while(pc < (fsize + 0x200)) {
     DisassembleChip8Op(buffer, pc);
     pc += 2;
     printf("\n");
   }
+  */
+
+
+  fclose(f); // close FILE
 
   return 0;
 }
