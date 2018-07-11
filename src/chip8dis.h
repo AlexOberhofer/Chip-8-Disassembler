@@ -8,15 +8,15 @@
 
 typedef struct C8 {
 
-  uint8_t V[0x10];
-  uint8_t stack[0x10];
+  uint8_t V[NUM_REGISTERS];
+  uint8_t stack[NUM_REGISTERS];
   uint16_t I;
-  uint16_t sp;
+  uint8_t sp;
   uint16_t pc;
   uint8_t delay;
   uint8_t timer;
   unsigned char *memory;
-  unsigned char *screen; //starts at 0xF00
+  unsigned char screen[64*32]; //starts at 0xF00
 
 } C8;
 
@@ -40,7 +40,9 @@ unsigned char fonts[80] =
   0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
-void DisassembleChip8Op(uint8_t *codebuffer, int pc);
+void instructionNotImplemented(uint16_t opcode, uint16_t pc);
+void disassembleChip8Op(uint8_t *codebuffer, int pc);
+void executeOp(C8* c);
 void init(FILE *f, C8 * c);
 void dumpMem(C8 * c);
 void dumpReg(C8 * c);

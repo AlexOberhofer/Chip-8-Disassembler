@@ -32,11 +32,77 @@ use of this instruction would be 134A, which would reference the memory address 
 
 
 
-void executeOp(void) {
+void executeOp(C8* c) {
+  uint8_t *code = &c->memory[c->pc];
+  uint16_t opcode = c->memory[c->pc] << 8 | c->memory[c->pc+1];
+  uint8_t firstnib = code[0] >> 4;
 
+  switch (firstnib) {
+      case 0x0:
+          switch (code[1]) {
+            case 0xe0: memset(c->screen, 0, sizeof(c->screen)); c->pc +=2; break;
+            case 0xee: instructionNotImplemented(opcode, c->pc); break;
+            default: instructionNotImplemented(opcode, c->pc); break;
+          }
+          break;
+      case 0x01: instructionNotImplemented(opcode, c->pc); break;
+      case 0x02: instructionNotImplemented(opcode, c->pc); break;
+      case 0x03: instructionNotImplemented(opcode, c->pc); break;
+      case 0x04: instructionNotImplemented(opcode, c->pc); break;
+      case 0x05: instructionNotImplemented(opcode, c->pc); break;
+      case 0x06: instructionNotImplemented(opcode, c->pc); break;
+      case 0x07: instructionNotImplemented(opcode, c->pc); break;
+      case 0x08:{
+        uint8_t lastnib = code[1] &0xf;
+        switch(lastnib) {
+          case 0x0: instructionNotImplemented(opcode, c->pc); break;
+          case 0x1: instructionNotImplemented(opcode, c->pc); break;
+          case 0x2: instructionNotImplemented(opcode, c->pc); break;
+          case 0x3: instructionNotImplemented(opcode, c->pc); break;
+          case 0x4: instructionNotImplemented(opcode, c->pc); break;
+          case 0x5: instructionNotImplemented(opcode, c->pc); break;
+          case 0x6: instructionNotImplemented(opcode, c->pc); break;
+          case 0x7: instructionNotImplemented(opcode, c->pc); break;
+          case 0xe: instructionNotImplemented(opcode, c->pc); break;
+          default: printf("UNKNOWN 8 Instruction"); break;
+        }
+      }
+      break;
+      case 0x09: instructionNotImplemented(opcode, c->pc); break;
+      case 0x0a: instructionNotImplemented(opcode, c->pc); break;
+      case 0x0b: instructionNotImplemented(opcode, c->pc); break;
+      case 0x0c: instructionNotImplemented(opcode, c->pc); break;
+      case 0x0d: instructionNotImplemented(opcode, c->pc); break;
+      case 0x0e:
+      switch(code[1]){
+        case 0x9E: instructionNotImplemented(opcode, c->pc); break;
+        case 0xA1: instructionNotImplemented(opcode, c->pc); break;
+        default: printf("UNKNOWN E Instruction");break;
+      }
+      break;
+      case 0x0f:
+        switch(code[1]){
+          case 0x07: instructionNotImplemented(opcode, c->pc); break;
+          case 0x0a: instructionNotImplemented(opcode, c->pc); break;
+          case 0x15: instructionNotImplemented(opcode, c->pc); break;
+          case 0x18: instructionNotImplemented(opcode, c->pc); break;
+          case 0x1e: instructionNotImplemented(opcode, c->pc); break;
+          case 0x29: instructionNotImplemented(opcode, c->pc); break;
+          case 0x33: instructionNotImplemented(opcode, c->pc);; break;
+          case 0x55: instructionNotImplemented(opcode, c->pc); break;
+          case 0x65: instructionNotImplemented(opcode, c->pc); break;
+          default: printf("UNKNOWN F Instruction"); break;
+        }
+        break;
+  }
 }
 
-void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
+void instructionNotImplemented(uint16_t opcode, uint16_t pc) {
+  printf("ERROR: OPCODE %04x AT PC: %04x\n", opcode, pc);
+  exit(-1);
+}
+
+void disassembleChip8Op(uint8_t *codebuffer, int pc) {
 
     uint8_t *code = &codebuffer[pc];
     uint8_t firstnib = (code[0] >> 4);
@@ -108,8 +174,7 @@ void DisassembleChip8Op(uint8_t *codebuffer, int pc) {
 void init(FILE *f, C8 * c) {
 
   c-> memory = calloc(4096, 1);
-  c-> screen = &c->memory[0xF00];
-  c-> sp = 0xFA0;
+  c-> sp = 0;
   c-> pc = 0x200;
 
   //Place fonts in portion of memory that  would normally be occupied
@@ -144,7 +209,7 @@ void dumpReg(C8 * c) {
   printf("\nSPECIAL REGISTERS--------------------\n\n");
   printf("I[%04X]\n", c->I);
   printf("PC[%04X]\n", c->pc);
-  printf("SP[%04X]\n", c->sp);
+  printf("SP[%02X]\n", c->sp);
   printf("DELAY[%02X]\n", c->delay);
   printf("TIMER[%02X]\n", c->timer);
   printf("\n");
@@ -170,7 +235,7 @@ void dumpMem(C8 * c){
       printf("\nBEGIN PROGRAM MEMORY(0x200 - 0xFFF)-------------------------------------------------------------------\n\n");
     }
 
-    printf("I:%04X %02x%02x  ", i, c->memory[i], c->memory[i+1]);
+    printf("A:%04X %02x%02x  ", i, c->memory[i], c->memory[i+1]);
     count++;
 
     if(count == 8) {
@@ -197,31 +262,29 @@ int main(int argc, char* argv[]) {
   //initialize memory values
   init(f, c);
 
-  dumpMem(c);
+  //dumpMem(c);
 
-  dumpReg(c);
+  //dumpReg(c);
+
 
   //get size of file
   fseek(f, 0L, SEEK_END);
   int fsize = ftell(f);
-  fseek(f, 0L, SEEK_SET);
 
   //CHIP 8 Program memory starts at 0x200
   //Thus we need to expect this
   //Read file into memory at 0x200 and close.
+  /*
   unsigned char *buffer = malloc(fsize + 0x200); //create a buffer
   fread(buffer+0x200, fsize, 1, f); //read file into memory
+  */
 
 
-  int pc = 0x200; // start PC at 0x200 address
-
-/*
-  while(pc < (fsize + 0x200)) {
-    DisassembleChip8Op(buffer, pc);
-    pc += 2;
+  while(c->pc < (fsize + 0x200)) {
+    executeOp(c);
     printf("\n");
   }
-  */
+
 
 
   fclose(f); // close FILE
