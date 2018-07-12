@@ -38,33 +38,94 @@ void executeOp(C8* c) {
   uint8_t firstnib = code[0] >> 4;
 
   switch (firstnib) {
+
       case 0x0:
           switch (code[1]) {
-            case 0xe0: memset(c->screen, 0, sizeof(c->screen)); c->pc +=2; break;
-            case 0xee: instructionNotImplemented(opcode, c->pc); break;
+            case 0xe0: //Clear the display.
+              memset(c->screen, 0, sizeof(c->screen)); c->pc +=2; break;
+            case 0xee: //Return from a subroutine.
+              c->pc=c->stack[(--c->sp) & 0xf] + 2 ;
+              break;
             default: instructionNotImplemented(opcode, c->pc); break;
           }
           break;
-      case 0x01: instructionNotImplemented(opcode, c->pc); break;
-      case 0x02: instructionNotImplemented(opcode, c->pc); break;
-      case 0x03: instructionNotImplemented(opcode, c->pc); break;
-      case 0x04: instructionNotImplemented(opcode, c->pc); break;
-      case 0x05: instructionNotImplemented(opcode, c->pc); break;
-      case 0x06: instructionNotImplemented(opcode, c->pc); break;
-      case 0x07: instructionNotImplemented(opcode, c->pc); break;
+
+      case 0x01: //Jump to location nnn.
+        c->pc = opcode & 0x0FFF;
+        break;
+
+      case 0x02: //Call subroutine at nnn.
+        c->stack[(c->sp++)&0xF] = c->pc;
+        c->pc = opcode & 0x0FFF; break;
+
+      case 0x03: //Skip next instruction if Vx = kk.
+        if(c->V[(opcode & 0x0F00) >> 8] == opcode & 0x00FF) {
+          c->pc +=4;
+        } else {
+          c->pc +=2;
+        } break;
+
+      case 0x04: //Skip next instruction if Vx != kk.
+        if(c->V[(opcode & 0x0F00) >> 8] != opcode & 0x00FF) {
+          c->pc +=4;
+        } else {
+          c->pc +=2;
+        } break;
+
+      case 0x05: //Skip next instruction if Vx = Vy.
+        if(c->V[(opcode & 0x0F00) >> 8] == c->V[opcode & 0x00F0 >> 4]) {
+          c->pc +=4;
+        } else {
+          c->pc +=2;
+        }  break;
+
+      case 0x06: //Set Vx = kk.
+        c->V[(opcode & 0x0F00) >> 8] = opcode & 0x00FF;
+        c->pc += 2; break;
+
+      case 0x07: //Set Vx = Vx + kk.
+        c->V[(opcode & 0x0F00) >> 8] += (opcode & 0x00FF);
+        c->pc += 2; break;
+
       case 0x08:{
         uint8_t lastnib = code[1] &0xf;
         switch(lastnib) {
-          case 0x0: instructionNotImplemented(opcode, c->pc); break;
-          case 0x1: instructionNotImplemented(opcode, c->pc); break;
-          case 0x2: instructionNotImplemented(opcode, c->pc); break;
-          case 0x3: instructionNotImplemented(opcode, c->pc); break;
-          case 0x4: instructionNotImplemented(opcode, c->pc); break;
-          case 0x5: instructionNotImplemented(opcode, c->pc); break;
+
+          case 0x0: //Set Vx = Vy.
+            c->V[(opcode & 0x0F00) >> 8] = c->V[(opcode & 0x00F0) >> 4];
+            c->pc += 2; break;
+
+          case 0x1: //Set Vx = Vx OR Vy
+            c->V[(opcode & 0x0F00) >> 8] = c->V[(opcode & 0x0F00) >> 8] | c->V[(opcode & 0x00F0) >> 4];
+            c->pc += 2; break;
+
+          case 0x2: //Set Vx = Vx AND Vy.
+            c->V[(opcode & 0x0F00) >> 8] = c->V[(opcode & 0x0F00) >> 8] & c->V[(opcode & 0x00F0) >> 4];
+            c->pc += 2; break;
+
+          case 0x3: //Set Vx = Vx XOR Vy
+            c->V[(opcode & 0x0F00) >> 8] = c->V[(opcode & 0x0F00) >> 8] ^ c->V[(opcode & 0x00F0) >> 4];
+            c->pc += 2; break;
+          case 0x4: //Set Vx = Vx + Vy, set VF = carry.
+            if(((int)c->V[(opcode & 0x0F00) >> 8] + (int) c->V[(opcode & 0x00F0) >> 4] < 256)) {
+              c->V[0xf] &= 0;
+            } else {
+              c->V[0xf] = 1;
+            }
+            c->V[(opcode & 0x0F00) >> 8] += c->V[(opcode & 0x00F0) >> 4];
+            c->pc += 2; break;
+          case 0x5: //Set Vx = Vx - Vy, set VF = NOT borrow.
+          if(((int)c->V[(opcode & 0x0F00) >> 8] - (int) c->V[(opcode & 0x00F0) >> 4] >= 0)) {
+            c->V[0xf] &= 0;
+          } else {
+            c->V[0xf] = 1;
+          }
+          c->V[(opcode & 0x0F00) >> 8] -= c->V[(opcode & 0x00F0 >> 4)];
+            c->pc +=2; break;
           case 0x6: instructionNotImplemented(opcode, c->pc); break;
           case 0x7: instructionNotImplemented(opcode, c->pc); break;
           case 0xe: instructionNotImplemented(opcode, c->pc); break;
-          default: printf("UNKNOWN 8 Instruction"); break;
+          default: instructionNotImplemented(opcode, c->pc); break;
         }
       }
       break;
@@ -95,6 +156,8 @@ void executeOp(C8* c) {
         }
         break;
   }
+
+  //TODO: Add some timer counting here
 }
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc) {
@@ -282,6 +345,7 @@ int main(int argc, char* argv[]) {
 
   while(c->pc < (fsize + 0x200)) {
     executeOp(c);
+    //dumpReg(c);
     printf("\n");
   }
 
