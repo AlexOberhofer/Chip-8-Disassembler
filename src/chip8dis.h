@@ -2,9 +2,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <SDL2/SDL.h>
 
 #define MEM_SIZE 4096
 #define NUM_REGISTERS 16
+#define SCREEN_W 640
+#define SCREEN_H 320
+#define SCREEN_BPP 32
+#define W 64
+#define H 32
 
 typedef struct C8 {
 
@@ -39,6 +45,10 @@ unsigned char fonts[80] =
   0xF0, 0x80, 0xF0, 0x80, 0xF0,
   0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
+
+static int keys[0x10] =  {SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5,
+                          SDLK_6, SDLK_7, SDLK_8, SDLK_9, SDLK_a, SDLK_b,
+                          SDLK_c, SDLK_d, SDLK_e, SDLK_f };
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc);
 void disassembleChip8Op(uint8_t *codebuffer, int pc);

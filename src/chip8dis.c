@@ -36,6 +36,14 @@ void executeOp(C8* c) {
   uint8_t *code = &c->memory[c->pc];
   uint16_t opcode = c->memory[c->pc] << 8 | c->memory[c->pc+1];
   uint8_t firstnib = code[0] >> 4;
+  int regx;
+  int regy;
+  int x;
+  int y;
+  int i;
+  int times;
+  unsigned height;
+  unsigned pixel;
 
   switch (firstnib) {
 
@@ -106,6 +114,7 @@ void executeOp(C8* c) {
           case 0x3: //Set Vx = Vx XOR Vy
             c->V[(opcode & 0x0F00) >> 8] = c->V[(opcode & 0x0F00) >> 8] ^ c->V[(opcode & 0x00F0) >> 4];
             c->pc += 2; break;
+
           case 0x4: //Set Vx = Vx + Vy, set VF = carry.
             if(((int)c->V[(opcode & 0x0F00) >> 8] + (int) c->V[(opcode & 0x00F0) >> 4] < 256)) {
               c->V[0xf] &= 0;
@@ -114,6 +123,7 @@ void executeOp(C8* c) {
             }
             c->V[(opcode & 0x0F00) >> 8] += c->V[(opcode & 0x00F0) >> 4];
             c->pc += 2; break;
+
           case 0x5: //Set Vx = Vx - Vy, set VF = NOT borrow.
           if(((int)c->V[(opcode & 0x0F00) >> 8] - (int) c->V[(opcode & 0x00F0) >> 4] >= 0)) {
             c->V[0xf] &= 0;
@@ -122,19 +132,76 @@ void executeOp(C8* c) {
           }
           c->V[(opcode & 0x0F00) >> 8] -= c->V[(opcode & 0x00F0 >> 4)];
             c->pc +=2; break;
-          case 0x6: instructionNotImplemented(opcode, c->pc); break;
-          case 0x7: instructionNotImplemented(opcode, c->pc); break;
-          case 0xe: instructionNotImplemented(opcode, c->pc); break;
+
+          case 0x6: //Set Vx = Vx SHR 1.
+            c->V[0xf] = c->V[(opcode & 0x0F00) >> 8] & 7;
+            c->V[(opcode & 0x0F00) >> 8] = c->V[(opcode & 0x0F00) >> 8] >> 1;
+            c->pc += 2; break;
+
+          case 0x7: //Set Vx = Vy - Vx, set VF = NOT borrow.
+            if((int)c->V[(opcode & 0x0F00) >> 8] > (int)c->V[(opcode & 0x00F0) >> 4]){
+              c->V[0xf] = 1;
+            } else {
+              c->V[0xf] &= 0;
+            }
+            c->V[(opcode & 0x0F00) >> 8] =  c->V[(opcode & 0x00F0) >> 4] - c->V[(opcode & 0x0F00) >> 8];
+            c->pc += 2; break;
+
+          case 0xe: //Set Vx = Vx SHL 1.
+            c->V[0xf] = c->V[(opcode & 0x0F00) >> 8] >> 7;
+            c->V[(opcode & 0x0F00) >> 8] = c->V[(opcode & 0x0F00) >> 8] << 1;
+            c->pc += 2; break;
           default: instructionNotImplemented(opcode, c->pc); break;
         }
       }
       break;
-      case 0x09: instructionNotImplemented(opcode, c->pc); break;
-      case 0x0a: instructionNotImplemented(opcode, c->pc); break;
-      case 0x0b: instructionNotImplemented(opcode, c->pc); break;
-      case 0x0c: instructionNotImplemented(opcode, c->pc); break;
-      case 0x0d: instructionNotImplemented(opcode, c->pc); break;
-      case 0x0e:
+
+      case 0x09: //Skip next instruction if Vx != Vy.
+        if((c->V[opcode & 0x0F00] >> 8) != (c->V[opcode & 0x0F00] >> 4)){
+          c->pc += 4;
+        } else {
+          c-> pc += 2;
+        }
+        break;
+
+      case 0x0a: //Set I = nnn.
+        c->I = c->V[opcode & 0x0FFF];
+        c->pc +=2;
+         break;
+
+      case 0x0b: //Jump to location nnn + V0
+        c->pc = (opcode & (0x0FFF)) + c->V[0];
+        break;
+
+      case 0x0c:
+        c->V[(opcode & 0x0F00) >> 8] = rand()  & (opcode & 0x00FF);
+        c->pc +=2;
+        break;
+
+      case 0x0d: //Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
+        regx = c->V[(opcode & 0x0F00) >> 8];
+        regy = c->V[(opcode & 0x00F0) >> 4];
+        height = opcode & 0x000F;
+        c->V[0xf] &= 0;
+
+        for(y = 0; y < height; y++) {
+          pixel = c->memory[c->I + y];
+          for(x = 0; x < 8; x++){
+            if(pixel & (0x80 >> x)){
+              if(c->screen[x + regx + (y + regy) * 64]){
+                c->V[0xf] = 1;
+              }
+              c->screen[x + regx + (y + regy) * 64] ^= 1;
+            }
+          }
+        }
+        c->pc += 2;
+        break;
+
+      case 0x0e: //Skip next instruction if key with the value of Vx is pressed.
+        break;
+
+
       switch(code[1]){
         case 0x9E: instructionNotImplemented(opcode, c->pc); break;
         case 0xA1: instructionNotImplemented(opcode, c->pc); break;
@@ -204,7 +271,7 @@ void disassembleChip8Op(uint8_t *codebuffer, int pc) {
             default: printf("UNKNOWN 8 Instruction"); break;
           }
         }
-        break;
+          break;
         case 0x09: printf("%-10s V%01X, V%01X", "SNE", code[0]&0xf, code[1] >> 4); break;
         case 0x0a: printf("%-10s I, #$%01x%02x", "MVI", code[0]&0xf, code[1]); break;
         case 0x0b: printf("%-10s $%01x%02x(V0)", "JUMP", code[0]&0xf, code[1]); break;
@@ -325,9 +392,12 @@ int main(int argc, char* argv[]) {
   //initialize memory values
   init(f, c);
 
-  //dumpMem(c);
+  uint8_t *keys;
+  SDL_Event event;
 
-  //dumpReg(c);
+  SDL_Init(SDL_INIT_EVERYTHING);
+
+  SDL_Window *window = SDL_CreateWindow("Chip 8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, 0);
 
 
   //get size of file

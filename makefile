@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-I.
+CFLAGS=-I /usr/include/SDL2
 DEPS= chip8diss.h
 TARGET= chip8dis
 
