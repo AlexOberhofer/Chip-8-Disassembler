@@ -1,4 +1,5 @@
 *.o
 chip8dis
+chip8
 .git
 bin/
