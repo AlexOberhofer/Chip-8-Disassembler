@@ -54,5 +54,6 @@ void instructionNotImplemented(uint16_t opcode, uint16_t pc);
 void disassembleChip8Op(uint8_t *codebuffer, int pc);
 void executeOp(C8* c);
 void init(FILE *f, C8 * c);
+void sdl_draw(C8 * c, SDL_Window *window);
 void dumpMem(C8 * c);
 void dumpReg(C8 * c);

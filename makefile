@@ -10,4 +10,4 @@ makechip8disassembler: src/chip8dis.o
 		$(CC) -o ./bin/chip8 ./src/$(TARGET).c `sdl2-config --cflags --libs`
 
 clean:
-	rm bin/chip-8-disassembler
+	rm ./bin/chip8

@@ -45,6 +45,8 @@ void executeOp(C8* c) {
   unsigned height;
   unsigned pixel;
 
+  printf("%04x %02x %02x \n", c->pc, code[0], code[1]);
+
   switch (firstnib) {
 
       case 0x0:
@@ -67,14 +69,14 @@ void executeOp(C8* c) {
         c->pc = opcode & 0x0FFF; break;
 
       case 0x03: //Skip next instruction if Vx = kk.
-        if(c->V[(opcode & 0x0F00) >> 8] == opcode & 0x00FF) {
+        if(c->V[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF)) {
           c->pc +=4;
         } else {
           c->pc +=2;
         } break;
 
       case 0x04: //Skip next instruction if Vx != kk.
-        if(c->V[(opcode & 0x0F00) >> 8] != opcode & 0x00FF) {
+        if(c->V[(opcode & 0x0F00) >> 8] != (opcode & 0x00FF)) {
           c->pc +=4;
         } else {
           c->pc +=2;
@@ -376,6 +378,26 @@ void dumpMem(C8 * c){
   printf("\n");
 }
 
+void sdl_draw(C8 * c, SDL_Window *window) {
+
+  int i, j;
+  SDL_Surface *surface = SDL_GetWindowSurface(window);
+
+  SDL_LockSurface(surface);
+  Uint32 * screen = (Uint32 *) surface->pixels;
+
+  //memset (screen,0,surface->w*surface->h*sizeof(Uint32));
+  SDL_memset(surface->pixels,0,surface->w*surface->h*sizeof(Uint32) );
+  for (i = 0; i < SCREEN_H; i++)
+    for (j = 0; j < SCREEN_W; j++){
+      screen[j+i*surface->w] = c->screen[(j/10)+(i/10)*64] ? 0xFFFFFFFF : 0;
+  }
+
+  SDL_UnlockSurface(surface);
+  SDL_Delay(15);
+
+}
+
 int main(int argc, char* argv[]) {
 
 
@@ -399,24 +421,24 @@ int main(int argc, char* argv[]) {
 
   SDL_Window *window = SDL_CreateWindow("Chip 8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, 0);
 
+  //TODO:Key press
+  //
+  // draw
+  //
+  // execute
+  //
+  // timer
 
   //get size of file
   fseek(f, 0L, SEEK_END);
   int fsize = ftell(f);
 
-  //CHIP 8 Program memory starts at 0x200
-  //Thus we need to expect this
-  //Read file into memory at 0x200 and close.
-  /*
-  unsigned char *buffer = malloc(fsize + 0x200); //create a buffer
-  fread(buffer+0x200, fsize, 1, f); //read file into memory
-  */
+  while(1) {
+    //TODO: wait for keypress
+    //
 
-
-  while(c->pc < (fsize + 0x200)) {
     executeOp(c);
-    //dumpReg(c);
-    printf("\n");
+    sdl_draw(c, window);
   }
 
 
