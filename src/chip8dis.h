@@ -46,12 +46,13 @@ unsigned char fonts[80] =
   0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
-static int keys[0x10] =  {SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5,
+static int key_map[0x10] =  {SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5,
                           SDLK_6, SDLK_7, SDLK_8, SDLK_9, SDLK_a, SDLK_b,
                           SDLK_c, SDLK_d, SDLK_e, SDLK_f };
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc);
 void disassembleChip8Op(uint8_t *codebuffer, int pc);
+int process_keypress();
 void executeOp(C8* c);
 void init(FILE *f, C8 * c);
 void sdl_draw(C8 * c, SDL_Window *window);

@@ -36,6 +36,7 @@ void executeOp(C8* c) {
   uint8_t *code = &c->memory[c->pc];
   uint16_t opcode = c->memory[c->pc] << 8 | c->memory[c->pc+1];
   uint8_t firstnib = code[0] >> 4;
+  const Uint8 *keys;
   int regx;
   int regy;
   int x;
@@ -203,25 +204,68 @@ void executeOp(C8* c) {
       case 0x0e: //Skip next instruction if key with the value of Vx is pressed.
         break;
 
-
       switch(code[1]){
-        case 0x9E: instructionNotImplemented(opcode, c->pc); break;
-        case 0xA1: instructionNotImplemented(opcode, c->pc); break;
-        default: printf("UNKNOWN E Instruction");break;
+        case 0x9E: //Skip next instruction if key with the value of Vx is pressed.
+          keys = SDL_GetKeyboardState(NULL);
+          if(keys[key_map[c->V[(opcode & 0xF00) >> 8]]]) {
+            c->pc += 4;
+          } else {
+            c->pc += 2;
+          }
+          break;
+
+        case 0xA1: //Skip next instruction if key with the value of Vx is not pressed.
+          keys = SDL_GetKeyboardState(NULL);
+          if(!keys[key_map[c->V[(opcode & 0xF00) >> 8]]]) {
+            c->pc += 4;
+          } else {
+            c->pc += 2;
+          }
+          break;
+        default: instructionNotImplemented(opcode, c->pc);break;
       }
       break;
+
       case 0x0f:
         switch(code[1]){
-          case 0x07: instructionNotImplemented(opcode, c->pc); break;
-          case 0x0a: instructionNotImplemented(opcode, c->pc); break;
-          case 0x15: instructionNotImplemented(opcode, c->pc); break;
-          case 0x18: instructionNotImplemented(opcode, c->pc); break;
-          case 0x1e: instructionNotImplemented(opcode, c->pc); break;
-          case 0x29: instructionNotImplemented(opcode, c->pc); break;
+          case 0x07: //Set Vx = delay timer value.
+            c->V[(opcode & 0x0F00) >> 8] = c->delay;
+            c->pc += 2;
+            break;
+
+          case 0x0a://Wait for a key press, store the value of the key in Vx.
+            keys = SDL_GetKeyboardState(NULL);
+            for(i=0; i <0x10; i++){
+              if(keys[key_map[i]]){
+                c->V[(opcode & 0x0F00) >> 8] = i;
+                c->pc +=2;
+              }
+            }
+           break;
+
+          case 0x15: // Set delay timer = Vx.
+            c->delay = c->V[(opcode & 0x0F00) >> 8];
+            c->pc += 2;
+           break;
+
+          case 0x18: //Set sound timer = Vx.
+            c->timer = c->V[(opcode & 0x0F00) >> 8];
+            c->pc += 2;
+          break;
+
+          case 0x1e: //Set I = I + Vx.
+            c->I += c->V[(opcode & 0x0F00) >> 8];
+            c->pc += 2;
+          break;
+
+          case 0x29: // Set I = location of sprite for digit Vx.
+            c->I = c->V[(opcode & 0x0F00) >> 8] * 5;
+            c->pc += 2;
+            break;
           case 0x33: instructionNotImplemented(opcode, c->pc);; break;
           case 0x55: instructionNotImplemented(opcode, c->pc); break;
           case 0x65: instructionNotImplemented(opcode, c->pc); break;
-          default: printf("UNKNOWN F Instruction"); break;
+          default: instructionNotImplemented(opcode, c->pc); break;
         }
         break;
   }
@@ -231,7 +275,7 @@ void executeOp(C8* c) {
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc) {
   printf("ERROR: OPCODE %04x AT PC: %04x\n", opcode, pc);
-  exit(-1);
+  exit(1);
 }
 
 void disassembleChip8Op(uint8_t *codebuffer, int pc) {
@@ -386,7 +430,6 @@ void sdl_draw(C8 * c, SDL_Window *window) {
   SDL_LockSurface(surface);
   Uint32 * screen = (Uint32 *) surface->pixels;
 
-  //memset (screen,0,surface->w*surface->h*sizeof(Uint32));
   SDL_memset(surface->pixels,0,surface->w*surface->h*sizeof(Uint32) );
   for (i = 0; i < SCREEN_H; i++)
     for (j = 0; j < SCREEN_W; j++){
@@ -398,15 +441,38 @@ void sdl_draw(C8 * c, SDL_Window *window) {
 
 }
 
+int process_keypress(){
+  const Uint8 *keys = SDL_GetKeyboardState(NULL);
+    if(keys[SDL_SCANCODE_ESCAPE]){
+      exit(1);
+    }
+}
+
 int main(int argc, char* argv[]) {
 
-
+  int debug_flag = 0;
+  FILE *f;
   //OPEN FILE
-  FILE *f = fopen(argv[1], "rb");
+  if(argc == 2){
+      f = fopen(argv[1], "rb");
+  } else if (argc == 3) {
+      f = fopen(argv[2], "rb");
+
+      if(strcmp(argv[1], "--debug") == 0){
+        debug_flag = 1;
+        printf("debug_flag set.");
+      } else {
+        printf("Flags include --debug.\n");
+        exit(1);
+      }
+  }
+
   if (f == NULL) {
     printf("Error: Could not open %s\n", argv[1]);
+    printf("Usage: chip8 <flag> <path/to/rom>");
     exit(1);
   }
+
 
   //create memory space for Chip 8
   C8 * c = calloc(sizeof(C8), 1);
@@ -434,11 +500,18 @@ int main(int argc, char* argv[]) {
   int fsize = ftell(f);
 
   while(1) {
-    //TODO: wait for keypress
-    //
+    if(SDL_PollEvent(&event)){
+      continue;
+    }
+
+    if(debug_flag){
+      dumpReg(c);
+    }
+
 
     executeOp(c);
     sdl_draw(c, window);
+    process_keypress();
   }
 
 
