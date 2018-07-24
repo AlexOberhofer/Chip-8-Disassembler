@@ -26,6 +26,12 @@ typedef struct C8 {
 
 } C8;
 
+typedef struct C8_display {
+    SDL_Window *window;
+    SDL_Renderer* renderer;
+    SDL_Texture* texture;
+} C8_display;
+
 unsigned char fonts[80] =
 {
   0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -55,6 +61,7 @@ void disassembleChip8Op(uint8_t *codebuffer, int pc);
 int process_keypress();
 void executeOp(C8* c);
 void init(FILE *f, C8 * c);
-void sdl_draw(C8 * c, SDL_Window *window);
+//void sdl_draw(C8 * c, SDL_Window *window);
+void sdl_draw(C8 *c, C8_display *display);
 void dumpMem(C8 * c);
 void dumpReg(C8 * c);

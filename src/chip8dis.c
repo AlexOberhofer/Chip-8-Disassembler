@@ -54,8 +54,9 @@ void executeOp(C8* c) {
           switch (code[1]) {
             case 0xe0: //Clear the display.
               memset(c->screen, 0, sizeof(c->screen)); c->pc +=2; break;
+              //TODO:BUG POSSIBLE HERE in c8 emu logo
             case 0xee: //Return from a subroutine.
-              c->pc=c->stack[(--c->sp) & 0xf] + 2 ;
+              c->pc=c->stack[--(c->sp) & 0xf] + 2 ;
               break;
             default: instructionNotImplemented(opcode, c->pc); break;
           }
@@ -375,7 +376,7 @@ void disassembleChip8Op(uint8_t *codebuffer, int pc) {
 void init(FILE *f, C8 * c) {
 
   c-> memory = calloc(4096, 1);
-  c-> sp = 0;
+  c-> sp &= 0;
   c-> pc = 0x200;
 
   //Place fonts in portion of memory that  would normally be occupied
@@ -447,6 +448,15 @@ void dumpMem(C8 * c){
   printf("\n");
 }
 
+void sdl_draw(C8 *c, C8_display *display) {
+  SDL_UpdateTexture(display->texture, NULL, c->screen, SCREEN_W * sizeof(uint32_t));
+  SDL_RenderCopy(display->renderer, display->texture, NULL, NULL);
+  SDL_RenderPresent(display->renderer);
+
+  SDL_Delay(15);
+}
+
+/*
 void sdl_draw(C8 * c, SDL_Window *window) {
 
   int i, j;
@@ -465,6 +475,7 @@ void sdl_draw(C8 * c, SDL_Window *window) {
   SDL_Delay(15);
 
 }
+*/
 
 int process_keypress(){
   const Uint8 *keys = SDL_GetKeyboardState(NULL);
@@ -501,6 +512,7 @@ int main(int argc, char* argv[]) {
 
   //create memory space for Chip 8
   C8 * c = calloc(sizeof(C8), 1);
+  C8_display *display = malloc(sizeof(C8_display));
 
   //initialize memory values
   init(f, c);
@@ -508,9 +520,18 @@ int main(int argc, char* argv[]) {
   uint8_t *keys;
   SDL_Event event;
 
-  SDL_Init(SDL_INIT_EVERYTHING);
+  if(SDL_Init(SDL_INIT_EVERYTHING) < 0){
+      printf("SDL_Init failed: %s\n", SDL_GetError());
+      exit(1);
+  } else {
 
-  SDL_Window *window = SDL_CreateWindow("Chip 8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, 0);
+      display->window = SDL_CreateWindow("Chip 8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, SDL_WINDOW_OPENGL);
+      display->renderer = SDL_CreateRenderer(display->window, -1, SDL_RENDERER_ACCELERATED);
+      display->texture = SDL_CreateTexture(display->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_W, SCREEN_H);
+  }
+
+
+
 
   //TODO:Key press
   //
@@ -535,7 +556,7 @@ int main(int argc, char* argv[]) {
 
 
     executeOp(c);
-    sdl_draw(c, window);
+    //sdl_draw(c, display);
     process_keypress();
   }
 
