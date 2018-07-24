@@ -262,15 +262,40 @@ void executeOp(C8* c) {
             c->I = c->V[(opcode & 0x0F00) >> 8] * 5;
             c->pc += 2;
             break;
-          case 0x33: instructionNotImplemented(opcode, c->pc);; break;
-          case 0x55: instructionNotImplemented(opcode, c->pc); break;
-          case 0x65: instructionNotImplemented(opcode, c->pc); break;
+
+          case 0x33: //Store BCD representation of Vx in memory locations I, I+1, and I+2.
+            c->memory[c->I] = c->V[(opcode & 0x0F00) >> 8] / 100;
+            c->memory[c->I+1] = (c->V[(opcode & 0x0F00) >> 8] /10) % 10;
+            c->memory[c->I+2] = c->V[(opcode & 0x0F00) >> 8] % 10;
+            c->pc +=2;
+            break;
+          case 0x55: //Store registers V0 through Vx in memory starting at location I.
+
+            for(i=0; i <= (opcode & 0x0F00) >> 8; i++){
+                c->memory[c->I+1] = c->V[i];
+            }
+            c->pc +=2;
+            break;
+
+          case 0x65: //Read registers V0 through Vx from memory starting at location I.
+
+            for(i=0; i <= (opcode & 0x0F00) >> 8; i++){
+                c->V[i] = c->memory[c->I + i];
+            }
+            c->pc +=2;
+            break;
+
           default: instructionNotImplemented(opcode, c->pc); break;
         }
         break;
   }
 
   //TODO: Add some timer counting here
+  if(c->delay > 0)
+    c->delay--;
+  if(c->timer > 0)
+    c->timer--;
+
 }
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc) {
