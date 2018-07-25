@@ -58,10 +58,9 @@ static int key_map[0x10] =  {SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5,
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc);
 void disassembleChip8Op(uint8_t *codebuffer, int pc);
-void process_keypress();
+int process_keypress();
 void executeOp(C8* c);
 void init(FILE *f, C8 * c);
-//void sdl_draw(C8 * c, SDL_Window *window);
 void sdl_draw(C8 *c, C8_display *display);
 void dumpMem(C8 * c);
 void dumpReg(C8 * c);

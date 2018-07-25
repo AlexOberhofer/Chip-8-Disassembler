@@ -468,15 +468,17 @@ void sdl_draw(C8 *c, C8_display *display) {
 }
 
 
-void process_keypress(){
+int process_keypress(){
+  int result = 1;
   const Uint8 *keys = SDL_GetKeyboardState(NULL);
     if(keys[SDL_SCANCODE_ESCAPE]){
-      exit(1);
+      return  0;
     }
+    return 1;
 }
 
 int main(int argc, char* argv[]) {
-
+  int run = 1;
   int debug_flag = 0;
   int linectr = 0;
   int debug_count;
@@ -487,7 +489,6 @@ int main(int argc, char* argv[]) {
       f = fopen(argv[1], "rb");
   } else if (argc == 3) {
       f = fopen(argv[2], "rb");
-
       if(strcmp(argv[1], "--debug") == 0){
         debug_flag = 1;
         printf("debug_flag set.");
@@ -528,24 +529,25 @@ int main(int argc, char* argv[]) {
   fseek(f, 0L, SEEK_END);
   int fsize = ftell(f);
 
-  while(1) {
+  while(run) {
     if(SDL_PollEvent(&event)){
-      continue;
+      if(event.type == SDL_QUIT)
+        exit(1);
     }
 
     if(debug_flag){
       dumpReg(c);
-
     }
+
 
     executeOp(c);
     sdl_draw(c, display);
-    process_keypress();
-
+    run = process_keypress();
   }
 
 
   fclose(f); // close FILE
-
+  free(c);
+  free(display);
   return 0;
 }
