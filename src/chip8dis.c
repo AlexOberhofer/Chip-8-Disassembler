@@ -217,6 +217,7 @@ void executeOp(C8* c) {
           break;
 
         case 0xA1: //Skip next instruction if key with the value of Vx is not pressed.
+          SDL_PumpEvents();
           keys = SDL_GetKeyboardState(NULL);
           if(!keys[key_map[c->V[(opcode & 0xF00) >> 8]]]) {
             c->pc += 4;
@@ -236,7 +237,8 @@ void executeOp(C8* c) {
             break;
 
           case 0x0a://Wait for a key press, store the value of the key in Vx.
-            keys = SDL_GetKeyboardState(NULL);
+          SDL_PumpEvents();
+          keys = SDL_GetKeyboardState(NULL);
             for(i=0; i <0x10; i++){
               if(keys[key_map[i]]){
                 c->V[(opcode & 0x0F00) >> 8] = i;
@@ -463,7 +465,7 @@ void sdl_draw(C8 *c, C8_display *display) {
   SDL_RenderClear(display->renderer);
   SDL_RenderCopy(display->renderer, display->texture, NULL, NULL);
   SDL_RenderPresent(display->renderer);
-  SDL_Delay(30);
+  SDL_Delay(15);
 
 }
 

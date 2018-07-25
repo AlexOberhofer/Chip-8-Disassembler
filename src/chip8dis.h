@@ -52,9 +52,25 @@ unsigned char fonts[80] =
   0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
 
-static int key_map[0x10] =  {SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5,
-                          SDLK_6, SDLK_7, SDLK_8, SDLK_9, SDLK_a, SDLK_b,
-                          SDLK_c, SDLK_d, SDLK_e, SDLK_f };
+static int key_map[0x10] =  {
+  SDLK_1,
+	SDLK_2,
+	SDLK_3,
+	SDLK_4,
+	SDLK_q,
+	SDLK_w,
+	SDLK_e,
+	SDLK_r,
+	SDLK_a,
+	SDLK_s,
+	SDLK_d,
+	SDLK_f,
+	SDLK_y,
+	SDLK_x,
+	SDLK_c,
+SDLK_v
+
+};
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc);
 void disassembleChip8Op(uint8_t *codebuffer, int pc);
