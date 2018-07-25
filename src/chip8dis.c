@@ -42,6 +42,7 @@ void executeOp(C8* c) {
   int x;
   int y;
   int i;
+  int j;
   int times;
   unsigned height;
   unsigned pixel;
@@ -169,7 +170,7 @@ void executeOp(C8* c) {
         break;
 
       case 0x0a: //Set I = nnn.
-        c->I = c->V[opcode & 0x0FFF];
+        c->I = opcode & 0x0FFF;
         c->pc +=2;
          break;
 
@@ -260,7 +261,7 @@ void executeOp(C8* c) {
           break;
 
           case 0x29: // Set I = location of sprite for digit Vx.
-            c->I = c->V[(opcode & 0x0F00) >> 8] * 5;
+            c->I = 0x50 + c->V[(opcode & 0x0F00) >> 8] * 0x5;
             c->pc += 2;
             break;
 
@@ -273,7 +274,7 @@ void executeOp(C8* c) {
           case 0x55: //Store registers V0 through Vx in memory starting at location I.
 
             for(i=0; i <= (opcode & 0x0F00) >> 8; i++){
-                c->memory[c->I+1] = c->V[i];
+                c->memory[c->I+i] = c->V[i];
             }
             c->pc +=2;
             break;
@@ -291,11 +292,13 @@ void executeOp(C8* c) {
         break;
   }
 
-  //TODO: Add some timer counting here
+
   if(c->delay > 0)
     c->delay--;
   if(c->timer > 0)
     c->timer--;
+  if(c->timer != 0)
+    printf("BEEP\n");
 
 }
 
@@ -449,35 +452,23 @@ void dumpMem(C8 * c){
 }
 
 void sdl_draw(C8 *c, C8_display *display) {
-  SDL_UpdateTexture(display->texture, NULL, c->screen, SCREEN_W * sizeof(uint32_t));
-  SDL_RenderCopy(display->renderer, display->texture, NULL, NULL);
-  SDL_RenderPresent(display->renderer);
+  unsigned int pixels[W * H];
 
-  SDL_Delay(15);
-}
-
-/*
-void sdl_draw(C8 * c, SDL_Window *window) {
-
-  int i, j;
-  SDL_Surface *surface = SDL_GetWindowSurface(window);
-
-  SDL_LockSurface(surface);
-  Uint32 * screen = (Uint32 *) surface->pixels;
-
-  SDL_memset(surface->pixels,0,surface->w*surface->h*sizeof(Uint32) );
-  for (i = 0; i < SCREEN_H; i++)
-    for (j = 0; j < SCREEN_W; j++){
-      screen[j+i*surface->w] = c->screen[(j/10)+(i/10)*64] ? 0xFFFFFFFF : 0;
+  for(int i = 0; i < (W * H); i++){
+    unsigned short pixel = c->screen[i];
+    pixels[i] = (0x00FFFFFF * pixel) | 0xFF000000;
   }
 
-  SDL_UnlockSurface(surface);
-  SDL_Delay(15);
+  SDL_UpdateTexture(display->texture, NULL, pixels, 64*sizeof(Uint32));
+  SDL_RenderClear(display->renderer);
+  SDL_RenderCopy(display->renderer, display->texture, NULL, NULL);
+  SDL_RenderPresent(display->renderer);
+  SDL_Delay(30);
 
 }
-*/
 
-int process_keypress(){
+
+void process_keypress(){
   const Uint8 *keys = SDL_GetKeyboardState(NULL);
     if(keys[SDL_SCANCODE_ESCAPE]){
       exit(1);
@@ -487,7 +478,10 @@ int process_keypress(){
 int main(int argc, char* argv[]) {
 
   int debug_flag = 0;
+  int linectr = 0;
+  int debug_count;
   FILE *f;
+
   //OPEN FILE
   if(argc == 2){
       f = fopen(argv[1], "rb");
@@ -527,19 +521,8 @@ int main(int argc, char* argv[]) {
 
       display->window = SDL_CreateWindow("Chip 8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, SDL_WINDOW_OPENGL);
       display->renderer = SDL_CreateRenderer(display->window, -1, SDL_RENDERER_ACCELERATED);
-      display->texture = SDL_CreateTexture(display->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_W, SCREEN_H);
+      display->texture = SDL_CreateTexture(display->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, W, H);
   }
-
-
-
-
-  //TODO:Key press
-  //
-  // draw
-  //
-  // execute
-  //
-  // timer
 
   //get size of file
   fseek(f, 0L, SEEK_END);
@@ -552,14 +535,14 @@ int main(int argc, char* argv[]) {
 
     if(debug_flag){
       dumpReg(c);
+
     }
 
-
     executeOp(c);
-    //sdl_draw(c, display);
+    sdl_draw(c, display);
     process_keypress();
-  }
 
+  }
 
 
   fclose(f); // close FILE

@@ -16,7 +16,7 @@ typedef struct C8 {
 
   uint8_t V[NUM_REGISTERS];
   uint8_t stack[NUM_REGISTERS];
-  uint16_t I;
+  short I;
   uint8_t sp;
   uint16_t pc;
   uint8_t delay;
@@ -58,7 +58,7 @@ static int key_map[0x10] =  {SDLK_0, SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_5,
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc);
 void disassembleChip8Op(uint8_t *codebuffer, int pc);
-int process_keypress();
+void process_keypress();
 void executeOp(C8* c);
 void init(FILE *f, C8 * c);
 //void sdl_draw(C8 * c, SDL_Window *window);
