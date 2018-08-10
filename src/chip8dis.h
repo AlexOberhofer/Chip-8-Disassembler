@@ -15,7 +15,7 @@
 typedef struct C8 {
 
   uint8_t V[NUM_REGISTERS];
-  uint8_t stack[NUM_REGISTERS];
+  uint16_t stack[NUM_REGISTERS];
   short I;
   uint8_t sp;
   uint16_t pc;

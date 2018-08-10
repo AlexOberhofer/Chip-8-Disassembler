@@ -54,11 +54,13 @@ void executeOp(C8* c) {
       case 0x0:
           switch (code[1]) {
             case 0xe0: //Clear the display.
-              memset(c->screen, 0, sizeof(c->screen)); c->pc +=2; break;
-              //TODO:BUG POSSIBLE HERE in c8 emu logo
-            case 0xee: //Return from a subroutine.
-              c->pc=c->stack[--(c->sp) & 0xf] + 2 ;
+              memset(c->screen, 0, sizeof(c->screen)); c->pc +=2;
               break;
+
+            case 0xee: //Return from a subroutine.
+              c->pc=c->stack[(--c->sp) & 0xf] + 2 ;
+              break;
+
             default: instructionNotImplemented(opcode, c->pc); break;
           }
           break;
@@ -69,7 +71,8 @@ void executeOp(C8* c) {
 
       case 0x02: //Call subroutine at nnn.
         c->stack[(c->sp++)&0xF] = c->pc;
-        c->pc = opcode & 0x0FFF; break;
+        c->pc = opcode & 0x0FFF;
+        break;
 
       case 0x03: //Skip next instruction if Vx = kk.
         if(c->V[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF)) {
@@ -204,12 +207,11 @@ void executeOp(C8* c) {
         break;
 
       case 0x0e: //Skip next instruction if key with the value of Vx is pressed.
-        break;
-
       switch(code[1]){
         case 0x9E: //Skip next instruction if key with the value of Vx is pressed.
-          keys = SDL_GetKeyboardState(NULL);
-          if(keys[key_map[c->V[(opcode & 0xF00) >> 8]]]) {
+        SDL_PumpEvents();
+        keys = SDL_GetKeyboardState(NULL);
+          if(keys[key_map[c->V[(opcode & 0x0F00) >> 8]]]) {
             c->pc += 4;
           } else {
             c->pc += 2;
@@ -219,7 +221,7 @@ void executeOp(C8* c) {
         case 0xA1: //Skip next instruction if key with the value of Vx is not pressed.
           SDL_PumpEvents();
           keys = SDL_GetKeyboardState(NULL);
-          if(!keys[key_map[c->V[(opcode & 0xF00) >> 8]]]) {
+          if(!keys[key_map[c->V[(opcode & 0x0F00) >> 8]]]) {
             c->pc += 4;
           } else {
             c->pc += 2;
@@ -465,13 +467,13 @@ void sdl_draw(C8 *c, C8_display *display) {
   SDL_RenderClear(display->renderer);
   SDL_RenderCopy(display->renderer, display->texture, NULL, NULL);
   SDL_RenderPresent(display->renderer);
-  SDL_Delay(15);
+  SDL_Delay(1);
 
 }
 
 
 int process_keypress(SDL_Event *e){
-  int result = 1;
+  //int result = 1;
   const Uint8 *keys = SDL_GetKeyboardState(NULL);
     if(keys[SDL_SCANCODE_ESCAPE])
       return  0;
