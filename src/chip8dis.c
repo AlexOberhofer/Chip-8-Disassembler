@@ -470,11 +470,23 @@ void sdl_draw(C8 *c, C8_display *display) {
 }
 
 
-int process_keypress(){
+int process_keypress(SDL_Event *e){
   int result = 1;
   const Uint8 *keys = SDL_GetKeyboardState(NULL);
-    if(keys[SDL_SCANCODE_ESCAPE]){
+    if(keys[SDL_SCANCODE_ESCAPE])
       return  0;
+    if(keys[SDL_SCANCODE_P]) {
+       while(1){
+         if(SDL_PollEvent(e)){
+           const Uint8 *keys_paused = SDL_GetKeyboardState(NULL);
+           if(keys[SDL_SCANCODE_ESCAPE]){
+             return 0;
+           } else if(keys[SDL_SCANCODE_R]){
+             break;
+           }
+         }
+
+       }
     }
     return 1;
 }
@@ -544,7 +556,7 @@ int main(int argc, char* argv[]) {
 
     executeOp(c);
     sdl_draw(c, display);
-    run = process_keypress();
+    run = process_keypress(&event);
   }
 
 
