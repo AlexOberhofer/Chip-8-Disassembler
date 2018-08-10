@@ -53,23 +53,10 @@ unsigned char fonts[80] =
 };
 
 static int key_map[0x10] =  {
-  SDLK_1,
-	SDLK_2,
-	SDLK_3,
-	SDLK_4,
-	SDLK_q,
-	SDLK_w,
-	SDLK_e,
-	SDLK_r,
-	SDLK_a,
-	SDLK_s,
-	SDLK_d,
-	SDLK_f,
-	SDLK_y,
-	SDLK_x,
-	SDLK_c,
-SDLK_v
-
+  SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3, SDL_SCANCODE_4,
+  SDL_SCANCODE_Q, SDL_SCANCODE_W, SDL_SCANCODE_E, SDL_SCANCODE_R,
+  SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D, SDL_SCANCODE_F,
+  SDL_SCANCODE_Z, SDL_SCANCODE_X, SDL_SCANCODE_C, SDL_SCANCODE_V
 };
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc);
