@@ -264,7 +264,6 @@ void executeOp(C8* c) {
             c->pc += 2;
           break;
 
-          //todo: FONT FETCH: THIS IS PROBABLY WHY FONTS WONT SHOW UP
           case 0x29: // Set I = location of sprite for digit Vx.
             c->I = c->V[(opcode & 0x0F00) >> 8] * 0x5;
             c->pc += 2;
