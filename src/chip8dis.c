@@ -264,8 +264,9 @@ void executeOp(C8* c) {
             c->pc += 2;
           break;
 
+          //todo: FONT FETCH: THIS IS PROBABLY WHY FONTS WONT SHOW UP
           case 0x29: // Set I = location of sprite for digit Vx.
-            c->I = 0x50 + c->V[(opcode & 0x0F00) >> 8] * 0x5;
+            c->I = c->V[(opcode & 0x0F00) >> 8] * 0x5;
             c->pc += 2;
             break;
 
@@ -386,16 +387,17 @@ void init(FILE *f, C8 * c) {
   c-> sp &= 0;
   c-> pc = 0x200;
 
+  //initialize memory values
+  memset(c->screen, 0, sizeof(c->screen));
+  memset(c->V, 0, sizeof(c->V));
+  memset(c->stack, 0, sizeof(c->stack));
+
   //Place fonts in portion of memory that  would normally be occupied
   //by the CH8 Interpreter
   for(int i = 0; i < 80; i++){
     c->memory[i] = fonts[i];
   }
 
-  //initialize memory values
-  memset(c->screen, 0, sizeof(c->screen));
-  memset(c->V, 0, sizeof(c->V));
-  memset(c->stack, 0, sizeof(c->stack));
   fread(c->memory+0x200, 1, MEM_SIZE-0x200, f);
 
 }
@@ -405,6 +407,7 @@ void dumpReg(C8 * c) {
   int count = 0;
 
   printf("GENERAL PURPOSE REGISTERS------------\n\n");
+
 
   for(int i = 0; i < NUM_REGISTERS; i++){
     printf("V%01X[%02x] ", i, c->V[i]);
@@ -426,7 +429,10 @@ void dumpReg(C8 * c) {
   printf("\nSTACK--------------------------------\n\n");
 
   for(int i = 0; i < NUM_REGISTERS; i++){
-    printf("STACK FRAME(%02d) %04x\n", i, c->stack[i]);
+    printf("STACK FRAME(%02d) %04x ", i, c->stack[i]);
+    if((i-1)%2 == 0) {
+      printf("\n");
+    }
   }
   printf("\n");
 }
@@ -541,10 +547,6 @@ int main(int argc, char* argv[]) {
       display->texture = SDL_CreateTexture(display->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, W, H);
   }
 
-  //get size of file
-  fseek(f, 0L, SEEK_END);
-  int fsize = ftell(f);
-
   while(run) {
     if(SDL_PollEvent(&event)){
       if(event.type == SDL_QUIT)
@@ -553,6 +555,7 @@ int main(int argc, char* argv[]) {
 
     if(debug_flag){
       dumpReg(c);
+      //dumpMem(c);
     }
 
 
