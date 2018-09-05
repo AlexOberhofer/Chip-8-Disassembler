@@ -1,8 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
 #include "chip8dis.h"
+
 /*
 CHIP 8 NOTES
 
@@ -89,7 +86,7 @@ void executeOp(C8* c) {
         } break;
 
       case 0x05: //Skip next instruction if Vx = Vy.
-        if(c->V[(opcode & 0x0F00) >> 8] == c->V[opcode & 0x00F0 >> 4]) {
+        if(c->V[(opcode & 0x0F00) >> 8] == c->V[(opcode & 0x00F0) >> 4]) {
           c->pc +=4;
         } else {
           c->pc +=2;
@@ -133,24 +130,24 @@ void executeOp(C8* c) {
             c->pc += 2; break;
 
           case 0x5: //Set Vx = Vx - Vy, set VF = NOT borrow.
-          if(((int)c->V[(opcode & 0x0F00) >> 8] - (int) c->V[(opcode & 0x00F0) >> 4] >= 0)) {
-            c->V[0xf] &= 0;
-          } else {
-            c->V[0xf] = 1;
-          }
-          c->V[(opcode & 0x0F00) >> 8] -= c->V[(opcode & 0x00F0 >> 4)];
+            if(((int)c->V[(opcode & 0x0F00) >> 8] - (int) c->V[(opcode & 0x00F0) >> 4] >= 0)) {
+              c->V[0xf] = 1;
+            } else {
+              c->V[0xf] &= 0;
+            }
+            c->V[(opcode & 0x0F00) >> 8] -= c->V[(opcode & 0x00F0 >> 4)];
             c->pc +=2; break;
 
           case 0x6: //Set Vx = Vx SHR 1.
-            c->V[0xf] = c->V[(opcode & 0x0F00) >> 8] & 7;
+            c->V[0xf] = c->V[(opcode & 0x0F00) >> 8] & 0x1;
             c->V[(opcode & 0x0F00) >> 8] = c->V[(opcode & 0x0F00) >> 8] >> 1;
             c->pc += 2; break;
 
           case 0x7: //Set Vx = Vy - Vx, set VF = NOT borrow.
             if((int)c->V[(opcode & 0x0F00) >> 8] > (int)c->V[(opcode & 0x00F0) >> 4]){
-              c->V[0xf] = 1;
-            } else {
               c->V[0xf] &= 0;
+            } else {
+              c->V[0xf] = 1;
             }
             c->V[(opcode & 0x0F00) >> 8] =  c->V[(opcode & 0x00F0) >> 4] - c->V[(opcode & 0x0F00) >> 8];
             c->pc += 2; break;
@@ -475,7 +472,6 @@ void sdl_draw(C8 *c, C8_display *display) {
   SDL_Delay(1);
 
 }
-
 
 int process_keypress(SDL_Event *e){
   //int result = 1;
