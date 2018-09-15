@@ -1,4 +1,4 @@
-#include "chip8dis.h"
+#include "chip8.h"
 
 /*
 CHIP 8 NOTES
@@ -469,7 +469,7 @@ void sdl_draw(C8 *c, C8_display *display) {
   SDL_RenderClear(display->renderer);
   SDL_RenderCopy(display->renderer, display->texture, NULL, NULL);
   SDL_RenderPresent(display->renderer);
-  SDL_Delay(1);
+  SDL_Delay(2);
 
 }
 
