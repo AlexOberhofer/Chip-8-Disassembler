@@ -9,7 +9,7 @@ A Chip 8 Emulator/Interpreter written in C with an SDL2 Front end.
 ## Prerequisites 
 
 Building this emulator requires [GNU Make](https://www.gnu.org/software/make/ "Make"),
- [GCC](https://gcc.gnu.org/install/ "GCC"), and [SDL2](https://www.gnu.org/software/make/ "SDL2"). A
+ [GCC](https://gcc.gnu.org/install/ "GCC"), and [SDL2](https://wiki.libsdl.org/Installation "SDL2"). A
  build script is provided for GNU/Linux Systems, but this program can be compiled for Windows/MacOS/ARM Systems, etc.
 
 ## Building
