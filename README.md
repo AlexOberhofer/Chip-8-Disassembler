@@ -2,6 +2,10 @@
 
 A Chip 8 Emulator/Interpreter written in C with an SDL2 Front end.
 
+<p align="center">
+  <img src="https://github.com/AlexOberhofer/Chip-8-Emulator/raw/master/doc/screenshot.png" alt="Chip 8 Image"/>
+</p>
+
 ## Prerequisites 
 
 Building this emulator requires [GNU Make](https://www.gnu.org/software/make/ "Make"),
