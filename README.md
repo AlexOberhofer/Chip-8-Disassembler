@@ -70,7 +70,7 @@ R - RESUME GAME
 ```
 
 ```
-Q - QUIT 
+ESC - QUIT 
 ```
 
 ## Authors
