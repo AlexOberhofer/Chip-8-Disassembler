@@ -1,6 +1,6 @@
 # A Chip 8 Implementation in C and SDL2
 
-A Chip 8 Emulator/Interpreter written in C with an SDL2 Front end.
+A [Chip 8](https://en.wikipedia.org/wiki/CHIP-8 "Chip 8") Emulator/Interpreter written in C with an SDL2 Front end.
 
 <p align="center">
   <img src="https://github.com/AlexOberhofer/Chip-8-Emulator/raw/master/doc/screenshot.png" alt="Chip 8 Image"/>
