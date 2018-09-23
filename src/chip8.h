@@ -1,3 +1,21 @@
+/*******************************************************************************
+    A Chip 8 Interpreter
+    Copyright (C) 2018  Alex Oberhofer
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*******************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -62,6 +80,7 @@ static int key_map[0x10] =  {
 void instructionNotImplemented(uint16_t opcode, uint16_t pc);
 void disassembleChip8Op(uint8_t *codebuffer, int pc);
 int process_keypress(SDL_Event *e);
+void process_timers(C8 *c);
 void executeOp(C8* c);
 void init(FILE *f, C8 * c);
 void sdl_draw(C8 *c, C8_display *display);

@@ -1,34 +1,5 @@
 #include "chip8.h"
 
-/*
-CHIP 8 NOTES
-
-- Each Instruction is 2 bytes represented by 4 HEXIDECIMAL Digits
-How to access each bit -
-0 - code[0] >> 4
-1 - code[0] &0xf
-2 - code[1] >> 4
-3 - code[1] &0xf;
-
-nnn or addr - A 12-bit value, the lowest 12 bits of the instruction
-n or nibble - A 4-bit value, the lowest 4 bits of the instruction
-x - A 4-bit value, the lower 4 bits of the high byte of the instruction
-y - A 4-bit value, the upper 4 bits of the low byte of the instruction
-kk or byte - An 8-bit value, the lowest 8 bits of the instruction
-
-- When an instruction is presented containing non-hexadecimal characters, these
-locations should be replaced in a program with valid hexadecimal digits depending upon the input data.
-For example, valid uses of the CHIP-8 instruction 8XY1 include 8001, 81A1, 8F21, etc.
-
-- Consider the 1NNN, instruction, which is used to jump to a certain address. A valid
-use of this instruction would be 134A, which would reference the memory address 34A.
-
-- CHIP-8 programs are normally stored in memory in big-endian fashion, with the most
- significant byte of a two-byte instruction being stored first.
-*/
-
-
-
 void executeOp(C8* c) {
   uint8_t *code = &c->memory[c->pc];
   uint16_t opcode = c->memory[c->pc] << 8 | c->memory[c->pc+1];
@@ -39,8 +10,6 @@ void executeOp(C8* c) {
   int x;
   int y;
   int i;
-  int j;
-  int times;
   unsigned height;
   unsigned pixel;
 
@@ -293,14 +262,6 @@ void executeOp(C8* c) {
         break;
   }
 
-
-  if(c->delay > 0)
-    c->delay--;
-  if(c->timer > 0)
-    c->timer--;
-  if(c->timer != 0)
-    printf("BEEP\n");
-
 }
 
 void instructionNotImplemented(uint16_t opcode, uint16_t pc) {
@@ -435,13 +396,14 @@ void dumpReg(C8 * c) {
 
 void dumpMem(C8 * c){
 
+  int i;
+  int count = 0;
+
   printf("\n-----------------------------------------MEMORY DUMP INITIATED-----------------------------------------\n");
   printf("\n\n");
   printf("BEGIN INTERPRETER MEMORY(0x000 - 0x01FF)---------------------------------------------------------------\n\n");
 
-  int count = 0;
-
-  for(int i = 0; i < MEM_SIZE; i+=2){
+  for(i = 0; i < MEM_SIZE; i+=2){
     if(i == 0x200){
       printf("\nBEGIN PROGRAM MEMORY(0x200 - 0xFFF)-------------------------------------------------------------------\n\n");
     }
@@ -473,15 +435,23 @@ void sdl_draw(C8 *c, C8_display *display) {
 
 }
 
+void process_timers(C8 *c){
+    if(c->delay > 0)
+      c->delay--;
+    if(c->timer > 0)
+      c->timer--;
+    if(c->timer != 0)
+      printf("BEEP\n");
+}
+
 int process_keypress(SDL_Event *e){
-  //int result = 1;
+
   const Uint8 *keys = SDL_GetKeyboardState(NULL);
     if(keys[SDL_SCANCODE_ESCAPE])
       return  0;
     if(keys[SDL_SCANCODE_P]) {
        while(1){
          if(SDL_PollEvent(e)){
-           const Uint8 *keys_paused = SDL_GetKeyboardState(NULL);
            if(keys[SDL_SCANCODE_ESCAPE]){
              return 0;
            } else if(keys[SDL_SCANCODE_R]){
@@ -495,11 +465,16 @@ int process_keypress(SDL_Event *e){
 }
 
 int main(int argc, char* argv[]) {
+
   int run = 1;
+  short ticks = 0;
   int debug_flag = 0;
-  int linectr = 0;
-  int debug_count;
-  FILE *f;
+  FILE *f = NULL;
+  SDL_Event event;
+
+  //create memory space for Chip 8
+  C8 * c = calloc(sizeof(C8), 1);
+  C8_display *display = malloc(sizeof(C8_display));
 
   //OPEN FILE
   if(argc == 2){
@@ -521,22 +496,13 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-
-  //create memory space for Chip 8
-  C8 * c = calloc(sizeof(C8), 1);
-  C8_display *display = malloc(sizeof(C8_display));
-
   //initialize memory values
   init(f, c);
-
-  uint8_t *keys;
-  SDL_Event event;
 
   if(SDL_Init(SDL_INIT_EVERYTHING) < 0){
       printf("SDL_Init failed: %s\n", SDL_GetError());
       exit(1);
   } else {
-
       display->window = SDL_CreateWindow("Chip 8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_W, SCREEN_H, SDL_WINDOW_OPENGL);
       display->renderer = SDL_CreateRenderer(display->window, -1, SDL_RENDERER_ACCELERATED);
       display->texture = SDL_CreateTexture(display->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, W, H);
@@ -550,11 +516,17 @@ int main(int argc, char* argv[]) {
 
     if(debug_flag){
       dumpReg(c);
-      //dumpMem(c);
+      //dumpMem(c);  //<--Remove comment and recompile to enable memory debug dump
     }
 
-
     executeOp(c);
+
+    if(ticks == 10){
+      process_timers(c);
+      ticks = 0;
+    }
+
+    ticks++;
     sdl_draw(c, display);
     run = process_keypress(&event);
   }
