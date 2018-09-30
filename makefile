@@ -7,6 +7,7 @@ TARGET= chip8
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 makechip8disassembler: src/chip8.o
+		@mkdir -p bin
 		$(CC) -Wall -O2 -std=c18 -o ./bin/chip8 ./src/$(TARGET).c `sdl2-config --cflags --libs`
 
 clean:
