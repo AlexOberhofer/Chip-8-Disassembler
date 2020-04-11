@@ -109,16 +109,20 @@ int main(int argc, char* argv[]) {
       //dumpMem(c);  //<--Remove comment and recompile to enable memory debug dump
     }
 
-    //do keyboard IO here
-
+    //Keyboard vars
     uint8_t *code = &c->memory[c->pc];
     uint16_t opcode = c->memory[c->pc] << 8 | c->memory[c->pc+1];
     uint8_t byte = code[0] >> 4;
 
+    /**
+    * This is hacky but this is how I will have to abstract the keyboard functions
+    * in the interpreter for each specific platform. To port this code a developer will
+    * be required to provide their own platform specific implementation for these 3 opcodes
+    * */
     if(byte == 0x0e) 
     {
 
-      if(code[1] == 0x9e)
+      if(code[1] == 0x9e) //Skip next instruction if key with the value of Vx is pressed.
       {
         SDL_PumpEvents();
         keys = SDL_GetKeyboardState(NULL);
@@ -129,7 +133,7 @@ int main(int argc, char* argv[]) {
           } else {
             c->pc += 2;
           }
-      } else if (code[1] == 0xa1)
+      } else if (code[1] == 0xa1) //Skip next instruction if key with the value of Vx is not pressed.
       {
         SDL_PumpEvents();
         keys = SDL_GetKeyboardState(NULL);
@@ -139,7 +143,7 @@ int main(int argc, char* argv[]) {
             c->pc += 2;
           }
       }
-    } else if (byte == 0x0f && code[1] == 0x0a)
+    } else if (byte == 0x0f && code[1] == 0x0a) //Wait for a key press, store the value of the key in Vx.
     {
       keys = SDL_GetKeyboardState(NULL);
             int i = 0;

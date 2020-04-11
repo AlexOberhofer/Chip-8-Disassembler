@@ -3,4 +3,6 @@ chip8dis
 chip8
 .git
 bin/
+res/*.dll
+release/
 .buildconfig

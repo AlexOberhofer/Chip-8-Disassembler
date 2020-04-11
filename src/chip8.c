@@ -191,6 +191,9 @@ void executeOp(C8* c) {
         c->pc += 2;
         break;
 
+      /**
+      * Code commented out below is platform specific to sdl2, but will work with an sdl2 impl
+      **/
       case 0x0e: //Skip next instruction if key with the value of Vx is pressed.
       switch(code[1]){
         case 0x9E: //Skip next instruction if key with the value of Vx is pressed.
