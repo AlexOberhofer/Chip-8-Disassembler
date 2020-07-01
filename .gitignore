@@ -1,5 +1,6 @@
 *.o
 chip8dis
+SDL2*
 chip8
 .git
 bin/
