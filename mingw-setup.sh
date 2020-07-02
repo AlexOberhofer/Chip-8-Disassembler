@@ -10,9 +10,9 @@
 
 echo "Downloading SDL2-mingw32 cross-compiler libraries..."
 
-mkdir ./lib/sdl2-mingw64/
+mkdir ./lib/
 
-cd ./lib/sdl2-mingw64/
+cd ./lib/
 
 #mingw headers
 wget https://www.libsdl.org/release/SDL2-devel-2.0.12-mingw.tar.gz
@@ -23,11 +23,11 @@ rm SDL2-devel-2.0.12-mingw.tar.gz
 
 #mingw mixer headers
 
-wget https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-devel-2.0.4-mingw.tar.gz
+#wget https://www.libsdl.org/projects/SDL_mixer/release/SDL2_mixer-devel-2.0.4-mingw.tar.gz
 
-tar -xvzf SDL2_mixer-devel-2.0.4-mingw.tar.gz
+#tar -xvzf SDL2_mixer-devel-2.0.4-mingw.tar.gz
 
-rm SDL2_mixer-devel-2.0.4-mingw.tar.gz
+#rm SDL2_mixer-devel-2.0.4-mingw.tar.gz
 
 cd ../..
 

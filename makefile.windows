@@ -1,5 +1,6 @@
 CC=x86_64-w64-mingw32-gcc
-CFLAGS=-I /usr/include/SDL2
+CFLAGS= -mwindows -I/usr/include/SDL2 -I./lib/SDL2-2.0.12/x86_64-w64-mingw32/include  -L./lib/SDL2-2.0.12/x86_64-w64-mingw32/lib 
+SDL-FLAGS= -lSDL2 -lpthread
 DEPS= chip8.h debug.h
 TARGET= chip8.exe
 
@@ -8,7 +9,7 @@ TARGET= chip8.exe
 
 makechip8disassembler: src/debug.o src/chip8.o src/system.o
 		@mkdir -p bin/win
-		$(CC) -Wall -std=c99 -o ./bin/win/$(TARGET) src/system.c ./src/debug.c ./src/chip8.c `sdl2-config --cflags --libs`
+		$(CC) $(CFLAGS) -Wall -std=c99 -o ./bin/win/$(TARGET) src/system.c ./src/debug.c ./src/chip8.c $(SDL-FLAGS)
 
 clean:
 	rm ./bin/win/$(TARGET)
