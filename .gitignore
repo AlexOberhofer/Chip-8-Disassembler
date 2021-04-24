@@ -4,3 +4,7 @@ chip8
 .git
 bin/
 .buildconfig
+src/chip8.data
+src/chip8.wasm
+src/chip8.js
+src/chip8.html
